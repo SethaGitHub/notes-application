@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sqlserver_container
+    environment:
+      SA_PASSWORD: "veryStronkPassword123"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    restart: always
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  migration:
+    container_name: migration
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    depends_on:
+      - sqlserver
+    volumes:
+      - ./backend/NoteAPI:/app
+    working_dir: /app
+    command: >
+      sh -c "dotnet tool restore && dotnet ef migrations add NewMigration --project NoteAPI.csproj --startup-project NoteAPI.csproj &&
+             dotnet ef database update --project NoteAPI.csproj --startup-project NoteAPI.csproj &&
+             echo 'Migrations Applied Successfully'"
+  
+  api:
+    container_name : api
+    build:
+      context: ./backend/NoteAPI
+      dockerfile: Dockerfile
+    ports:
+      - "5268:8080"
+    depends_on:
+      - sqlserver
+      - migration
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=tempdb;User ID=sa;Password=veryStronkPassword123;Encrypt=False;
+
+  client:
+    container_name : frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+
+volumes:
+  sql_data:
