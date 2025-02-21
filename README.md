@@ -26,8 +26,6 @@ docker-compose build
 docker-compose up
 ```
 
-This will start all necessary services defined in the `docker-compose.yml` file.
-
 ### 4. Access the Application
 
 Once the services are up, the application should be accessible at:
@@ -35,8 +33,6 @@ Once the services are up, the application should be accessible at:
 ```
 http://localhost:80
 ```
-
-Replace `PORT` with the actual port configured in your `docker-compose.yml` file.
 
 ## Stopping the Application
 
